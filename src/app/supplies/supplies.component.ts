@@ -17,6 +17,10 @@ export class SuppliesComponent implements OnInit {
   submitLoading: boolean = false;
   supplyArray: any;
   singleSupplyItem: any;
+  isEditing: boolean;
+  item: string;
+  newValue: string;
+  items = [];
   payments: any = ['Cash', 'Check', 'Donation'];
   constructor(private supplyService: SuppliesService, private router: Router) { }
 
@@ -30,7 +34,8 @@ export class SuppliesComponent implements OnInit {
       zipCode: new FormControl('', [Validators.required]),
       paymentType: new FormControl('', [Validators.required]),
       supplyDescription: new FormControl('', [Validators.required]),
-      suppliesNeeded: new FormControl('', [Validators.required])
+      item: new FormControl(''),
+      newValue: new FormControl('')
     });
     this.pickupList = new FormGroup({
       pickupName: new FormControl('', [Validators.required]),
@@ -39,7 +44,6 @@ export class SuppliesComponent implements OnInit {
     });
     this.supplyService.onGetSupplyLists().subscribe((data: any) => {
       this.supplyArray = data.data;
-      console.log( 'Supply Array' ,this.supplyArray)
     })
     
   }
@@ -49,15 +53,50 @@ export class SuppliesComponent implements OnInit {
 
   onSupplySubmit(){
     if (this.supplyList.invalid) {
-      console.log('invalid');
       return;
   }
     this.submitLoading = true;
-    return this.supplyService.onSubmitSupplies(this.supplyList.value).subscribe(data => {
+    const supplyList = {
+      personalInfo: this.supplyList.value,
+      supplyList: this.items
+    }
+    return this.supplyService.onSubmitSupplies(supplyList).subscribe(data => {
       this.submitLoading = false;
       location.reload()
     })
     
+  }
+
+  onChangeItem(value){
+    this.items[value].name = this.newValue;
+  }
+
+
+  onAddItem(){
+    if(this.item === ''){
+      return;
+    }
+    let count = this.randomKey();
+    this.items.forEach(data => {
+      while(data.id === count){
+        count = this.randomKey()
+      }
+    });
+
+    this.items.push({name: this.item, pickedUp: false, id: count});
+    this.item = '';
+  }
+
+  randomKey() {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  }
+
+  onEditItem(item){
+    item.isEditing = true;
+  }
+
+  onDeleteItem(x) {
+    this.items.splice(x, 1)
   }
 
   onSupplyClick(value){
@@ -65,9 +104,12 @@ export class SuppliesComponent implements OnInit {
      this.singleSupplyItem = itemNeeded[0];
   }
 
+  checkCheckBoxvalue(event, i){
+    this.singleSupplyItem.supplyList[i].pickedUp = event.target.checked;
+  }
+
   onPickupSubmit(value) {
     if (this.pickupList.invalid) {
-      console.log('hello')
       return;
     }
     this.pickupLoading = true;
@@ -76,7 +118,7 @@ export class SuppliesComponent implements OnInit {
       pickupList: this.pickupList.value,
       pickupInfo: this.singleSupplyItem
     }
-    this.router.navigate(['']);
+    console.log(pickupData);
     return this.supplyService.onPickupSupplies(pickupData).subscribe(data => {
       this.pickupLoading
       location.reload()

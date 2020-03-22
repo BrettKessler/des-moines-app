@@ -10,8 +10,9 @@
   <div class="col middle">Date Submitted</div>
   <div class="col right">Payment type</div>
 </div>
-  <div *ngFor="let todo of supplyArray" class="align-none" class="col-sm-12 bars margin-top">
-    <div (click)="onSupplyClick(todo._id)" data-toggle="modal" data-target="#supplyModal">
+  <div *ngFor="let todo of supplyArray">
+    <div (click)="onSupplyClick(todo._id)" data-toggle="modal" data-target="#supplyModal" class="align-none" class="col-sm-12 bars margin-top">
+
       <div class="row">
         <div  id="left"  class="col">
           <span class="name">{{todo.supplyDescription}}</span> 
@@ -50,6 +51,16 @@
             <div *ngIf="!pickupLoading">
                 <div class="col-lg-12">
                     <h5>What they need:</h5>
+                    <p>Check the items you are willing to pick up for them. Items that cannot be selected are already being picked up.</p>
+                    <ul>
+                      <li class="margin-15" *ngFor="let item of singleSupplyItem?.supplyList; let i = index">
+                          <label class="checkbox-label">
+                              <input (change)="checkCheckBoxvalue($event, i)" [checked]="item.pickedUp" type="checkbox">
+                              <span class="checkbox-custom rectangular"></span>
+                          </label>
+                          <span [ngClass]="{'strike': item.pickedUp, '': !item.pickedUp}">{{item.name}}</span> 
+                      </li>
+                    </ul>
                     <p>{{singleSupplyItem?.suppliesNeeded}}</p>
                     <p>Don't forget to fill out this form completely!</p>
                     <form [formGroup]="pickupList" class="col-md-12" (ngSubmit)="onPickupSubmit(singleSupplyItem?._id)" novalidate>
@@ -140,8 +151,8 @@
                           class="form-control"
                           required>
                         </div>
-                        <div class="form-group col-md-6">
-                            <label>Phone Number</label>
+                        <label>Phone Number</label>
+                        <div class="form-group col-md-12">
                             <input
                             type="text"
                             placeholder="Phone Number"
@@ -149,8 +160,8 @@
                             class="form-control"
                             required>
                           </div>
+                          <label>Address line 1</label>
                         <div class="form-group col-md-12">
-                            <label>Address line 1</label>
                             <input
                             type="text"
                             placeholder="Address Line 1"
@@ -158,8 +169,8 @@
                             class="form-control"
                             required>
                           </div>
+                          <label>Address Line 2</label>
                           <div class="form-group col-md-12">
-                            <label>Address Line 2</label>
                             <input
                             type="text"
                             placeholder="Address Line 2"
@@ -167,8 +178,8 @@
                             class="form-control"
                             >
                           </div>
+                          <label>Zip Code</label>
                           <div class="form-group col-md-12">
-                            <label>Zip Code</label>
                             <input
                             type="number"
                             placeholder="Zip Code"
@@ -176,15 +187,15 @@
                             class="form-control"
                             required>
                           </div>
+                          <label>Choose Your Payment Type</label>
                           <div class="payment">
-                            <label>Choose Your Payment Type</label>
                             <select class="payment" multiple formControlName="paymentType" required>
                               <option *ngFor="let payment of payments" [ngValue]="payment">{{payment}}
                               </option>
                            </select>
                           </div>
+                          <label>Supply Description (ex. "Groceries", "misc")</label>
                           <div class="form-group col-md-12">
-                            <label>Supply Description (ex. "Groceries", "misc")</label>
                             <input
                             type="string"
                             placeholder="Supply Description"
@@ -192,16 +203,41 @@
                             class="form-control"
                             required>
                           </div>
-                          <div class="form-group col-md-12">
-                            <label>Supplies Needed, Please Be Detailed. <br>(ex. "Honey Nut Cheerios", "1 lb Hamburger")</label>
-                            <textarea
-                            type="text"
-                            placeholder="Supplies you need"
-                            formControlName="suppliesNeeded"
-                            class="form-control"
-                            required>
-                            </textarea>
+                          <label>Add Items to List: </label>
+                          <div class="form-group input-group mb-3 no-margin">
+                            <input 
+                            type="text" 
+                            class="form-control" 
+                            placeholder="Add Item" 
+                            aria-label="Add Item" 
+                            formControlName="item"
+                            aria-describedby="basic-addon2"
+                            [(ngModel)]="item"
+                            >
+                            <div class="input-group-append">
+                              <button (click)="onAddItem()" class="btn color" type="button">Add Item</button>
+                            </div>
                           </div>
+                          <div class="container">
+                            <div class="row" *ngFor="let item of items; let i = index">
+                              <div *ngIf="!item.isEditing" class="col-sm-10 col-8 item-name">
+                                {{item.name}}
+                              </div>
+                              <div *ngIf="item.isEditing" class="col-sm-10 col-8 item-name">
+                                <input value="{{item.name}}" [(ngModel)]="newValue" [ngModelOptions]="{standalone: true}"  type="text">
+                                
+                              </div>
+                              <div *ngIf="item.isEditing" class="col-sm-2 col-4">
+                                <button class="btn btn-small btn-warning" (click)="item.isEditing = false; onChangeItem(i)">Change</button>
+                              </div>
+                              <div *ngIf="!item.isEditing" class="edit col-sm-1 col-2">
+                                <i (click)="item.isEditing = true" class="material-icons">edit</i>
+                              </div>
+                              <div *ngIf="!item.isEditing" class="delete col-sm-1 col-2">
+                                <i (click)="onDeleteItem(i)" class="material-icons delete">delete</i>
+                              </div>
+                            </div>
+                        </div>
                       </div>
                       <div class="row">
                         <button type="submit" [disabled]="supplyList.invalid" class="btn btn-success">Submit</button>

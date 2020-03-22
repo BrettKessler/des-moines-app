@@ -11,7 +11,14 @@ const supplySchema = mongoose.Schema({
     suppliesNeeded: String,
     paymentType: String,
     dateSubmitted: String,
-    ipAddess: String
+    ipAddess: String,
+    supplyList: [
+        {
+            name: String,
+            pickedUp: Boolean,
+            id: String
+        }
+    ]
 });
 const collectionName = 'supplies'
 module.exports = mongoose.model('Supply', supplySchema, collectionName);

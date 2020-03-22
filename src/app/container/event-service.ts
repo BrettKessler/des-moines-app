@@ -14,9 +14,6 @@ export class EventService {
 
     constructor(public http: HttpClient) {}
 
-    getIsOpen() {
-        return this.http.get(this.url + `check-on-status`).toPromise();
-    }
 
     public setStatus(value) {
         const data = {value};

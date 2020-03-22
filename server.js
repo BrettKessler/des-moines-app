@@ -2,21 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const path = require('path')
-const multer = require('multer');
 const upload = require('./services/s3-service');
 const bodyParser = require('body-parser');
 const port = process.env.PORT || 3000;
 const mongoose = require('mongoose');
-const Fortune = require('./backend/models/fortune');
-const KwikStar = require('./backend/models/kwik-star');
 const Image = require('./backend/models/images');
 const ApprovedImage = require('./backend/models/approved-image');
 const Supply = require('./backend/models/supply');
-const axios = require('axios').default;
 const email = require('./services/email-service');
-const ical = require('node-ical');
-const calParse = require('cal-parser');
-const schedule = require('node-schedule');
 const moment = require('moment');
 const ObjectId = require('mongodb').ObjectID;
 const accountSid = process.env.ACCOUNT_SID_TWILLIO;
@@ -97,31 +90,58 @@ function sendSMS() {
 
 app.route('/submit-supplies').post((req, res) => {
     const supply = new Supply({
-        name: req.body.name,
-        email: req.body.email,
-        address1: req.body.address1,
-        address2: req.body.address2,
-        phoneNumber: req.body.phoneNumber,
-        zipCode: req.body.zipCode,
-        supplyDescription: req.body.supplyDescription,
-        suppliesNeeded: req.body.suppliesNeeded,
-        paymentType: req.body.paymentType[0],
+        name: req.body.personalInfo.name,
+        email: req.body.personalInfo.email,
+        address1: req.body.personalInfo.address1,
+        address2: req.body.personalInfo.address2,
+        phoneNumber: req.body.personalInfo.phoneNumber,
+        zipCode: req.body.personalInfo.zipCode,
+        supplyDescription: req.body.personalInfo.supplyDescription,
+        paymentType: req.body.personalInfo.paymentType[0],
         dateSubmitted: moment().format('lll'),
-        ipAddess: req.ip
+        ipAddess: req.ip,
+        supplyList: req.body.supplyList
     })
     supply.save();
-    sendSMS();
-    email.sendSupplyEmail(req.body);
+    // sendSMS();
+    email.sendSupplyEmail(req.body.personalInfo);
     res.status(201).json({
         message: 'Hello'
     });
 })
 
 app.route('/pickup-supplies').post((req, res) => {
-    email.sendSupplyList(req.body);
-    deleteSupplyList(req.body.id);
+    const id = req.body.pickupInfo._id;
+
+    if(req.body.pickupInfo.supplyList === []) {
+        return res.status(200).json({
+            error: 'nothing selected'
+        });
+    }
+
+    const pickingUpSupplyList = []
+    const oldSupplyList = []
+
+    req.body.pickupInfo.supplyList.forEach(supplies => {
+        if(supplies.pickedUp) {
+            pickingUpSupplyList.push(supplies);
+        }
+        if(!supplies.pickedUp) {
+            oldSupplyList.push(supplies);
+        }
+    })
+
+    Supply.update({_id: ObjectId(id)}, {$set: {supplyList: oldSupplyList}}).then(data => {
+        console.log(data);
+    });
+
+    if(oldSupplyList.length === 0){
+        deleteSupplyList(req.body.id);
+    }
+
+    email.sendSupplyList(req.body, pickingUpSupplyList);
     return res.status(200).json({
-        message: 'Deleted one item'
+        message: 'Added items to list'
     });
 })
 

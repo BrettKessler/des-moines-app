@@ -24,29 +24,36 @@ async function sendContactUs(data) {
     }
 }
 
-async function updateUser(data) {
+async function updateUser(data, list) {
+    let shoppingList = ``;
     if(data) {
-    const output = `
-    <h1>Hi ${data.pickupInfo.name}, ${data.pickupList.pickupName} has agreed to get your supplies</h1>
-    <h3>Below you can find their contact information in case you need to get ahold of them.</h3>
-    <p>Name: ${data.pickupList.pickupName}</p>
-    <p>Email: ${data.pickupList.pickupEmail}</p>
-    <p>Phone Number: ${data.pickupList.pickupPhoneNumber}</p>
-  `
-    const msg = {
-        to: `${data.pickupInfo.email}`,
-        from: 'Des Moines App <no-reply@des-moines-app.com>',
-        subject: 'Someone Is Getting Your Supplies!',
-        text: 'Someone is getting your supplies',
-        html: output,
-      };
-      
-      sgMail.send(msg);
+        list.forEach(item => {
+            shoppingList = shoppingList + `<li>${item.name}</li>`;
+        })
+        const output = `
+        <h1>Hi ${data.pickupInfo.name}, ${data.pickupList.pickupName} has agreed to get your supplies</h1>
+        <h3>Below you can find their contact information in case you need to get ahold of them.</h3>
+        <p>Name: ${data.pickupList.pickupName}</p>
+        <p>Email: ${data.pickupList.pickupEmail}</p>
+        <p>Phone Number: ${data.pickupList.pickupPhoneNumber}</p>
+        <h3>Things they are picking up for you:</h3>
+        <ul class="list">
+        ${shoppingList}
+        </ul>
+        <p>Your list will stay on the site until all the items are gone.</p>
+    `
+        const msg = {
+            to: `${data.pickupInfo.email}`,
+            from: 'Des Moines App <no-reply@des-moines-app.com>',
+            subject: 'Someone Is Getting Your Supplies!',
+            text: 'Someone is getting your supplies',
+            html: output,
+        };
+        
+        sgMail.send(msg);
 
-    console.log('Updated User Email Sent');
-
+        console.log('Updated User Email Sent');
     }
-
 }
 
 async function sendSupplyEmail(data) {
@@ -71,35 +78,42 @@ async function sendSupplyEmail(data) {
     }
 }
 
-async function sendSupplyList(data) {
+async function sendSupplyList(data, list) {
+    let shoppingList = ``;
     if(data) {
-    const output = `
-    <h1>Hi ${data.pickupList.pickupName}, thanks for being a good resident of Des Moines</h1>
-    <h3>Below you can find the supplies ${data.pickupInfo.name} needs.</h3>
-    <p>Email: ${data.pickupInfo.email}</p>
-    <p>Address: ${data.pickupInfo.address1}</p>
-    <p>Address 2: ${data.pickupInfo.address2}</p>
-    <p>Phone Number: ${data.pickupInfo.phoneNumber}</p>
-    <p>Zip Code: ${data.pickupInfo.zipCode}</p>
-    <h3>They are needing</h3>
-    <p>${data.pickupInfo.suppliesNeeded}</p>
-  `
-    const msg = {
-        to: `{data.pickupList.pickupEmail}`,
-        from: 'Des Moines App <no-reply@des-moines-app.com>',
-        subject: 'Des Moines Resident Supply List',
-        text: 'Des Moines Resident Supply List',
-        html: output,
-      };
-      
-      sgMail.send(msg);
+        list.forEach(item => {
+            shoppingList = shoppingList + `<li>${item.name}</li>`;
+        })
 
-    await updateUser(data);
+        const output = `
+        <h1>Hi ${data.pickupList.pickupName}, thanks for being a good resident of Des Moines</h1>
+        <h3>Below you can find the supplies ${data.pickupInfo.name} needs.</h3>
+        <p>Email: ${data.pickupInfo.email}</p>
+        <p>Address: ${data.pickupInfo.address1}</p>
+        <p>Address 2: ${data.pickupInfo.address2}</p>
+        <p>Phone Number: ${data.pickupInfo.phoneNumber}</p>
+        <p>Zip Code: ${data.pickupInfo.zipCode}</p>
+        <h3>They are needing</h3>
+        <ul class="list">
+        ${shoppingList}
+        </ul>
+    `
+        const msg = {
+            to: `${data.pickupList.pickupEmail}`,
+            from: 'Des Moines App <no-reply@des-moines-app.com>',
+            subject: 'Des Moines Resident Supply List',
+            text: 'Des Moines Resident Supply List',
+            html: output,
+        };
 
-    console.log('Sent supply list email');
+        await updateUser(data, list);
 
+        sgMail.send(msg);
+
+        console.log('Sent supply list email');
+
+        }
     }
-}
 
 module.exports = {
     sendContactUs,
