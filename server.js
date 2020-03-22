@@ -78,10 +78,22 @@ app.get('/approved-image', (req, res) => {
     })
 })
 
-function sendSMS() {
+function sendSMS(data, list) {
+    let supplyList = ``;
+    list.forEach(item => {
+        supplyList = supplyList + ` ${item.name}, `;
+    })
+
     client.messages
     .create({
-        body: 'Someone has agreed to pick up your supplies! Please check your email for more information. (from www.grimesapp.com)',
+        body: `Des Moines App 
+        name: ${data.name} 
+        email: ${data.email} 
+        address1: ${data.address1} 
+        phone number: ${data.phoneNumber} 
+        supply description: ${data.supplyDescription} 
+        supply list: ${supplyList}
+        `,
         from: process.env.PHONE_NUMBER,
         to: process.env.MY_PHONE_NUMBER
     })
@@ -103,7 +115,7 @@ app.route('/submit-supplies').post((req, res) => {
         supplyList: req.body.supplyList
     })
     supply.save();
-    // sendSMS();
+    sendSMS(req.body.personalInfo, req.body.supplyList);
     email.sendSupplyEmail(req.body.personalInfo);
     res.status(201).json({
         message: 'Hello'
